@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.14...3.20)
 
 option(TEST_INSTALLED_VERSION "Test the version found by find_package" OFF)
 
@@ -7,6 +7,11 @@ project(
   VERSION 1.0
   LANGUAGES CXX
 )
+
+# build all dynamic libraries and executables together at bin directory
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 if(TEST_INSTALLED_VERSION)
   find_package(dependency 1.2.3 REQUIRED)
@@ -18,8 +23,11 @@ else()
   add_subdirectory(transitive_dependency)
 endif()
 
-add_executable(test main.cpp)
+add_executable(main main.cpp)
 
 target_link_libraries(
-  test dependency ns::namespaced_dependency transitive_dependency::transitive_dependency
+  main dependency ns::namespaced_dependency transitive_dependency::transitive_dependency
 )
+
+enable_testing()
+add_test(NAME test COMMAND main)
