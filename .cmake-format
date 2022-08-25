@@ -60,3 +60,4 @@ parse:
         CPACK: 1
         RUNTIME_DESTINATION: 1
         DEPENDENCIES: +
+        HEADER_SETS: +
