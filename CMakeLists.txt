@@ -17,6 +17,10 @@ function(packageProject)
     ${ARGN}
   )
 
+  if(DEFINED PROJECT_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "Unknown arguments '${PROJECT_UNPARSED_ARGUMENTS}' in packageProject")
+  endif()
+
   # optional feature: TRUE or FALSE or UNDEFINED! These variables will then hold the respective
   # value from the argument list or be undefined if the associated one_value_keyword could not be
   # found.
