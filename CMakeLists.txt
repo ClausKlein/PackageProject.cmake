@@ -126,8 +126,9 @@ function(packageProject)
     set(INSTALL_DIR_FOR_CMAKE_CONFIGS ${CMAKE_INSTALL_LIBDIR})
   endif()
 
+  string(TOLOWER "${PROJECT_NAME}" PROJECT_NAME_LOWER)
   write_basic_package_version_file(
-    "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+    "${PROJECT_BINARY_DIR}/${PROJECT_NAME_LOWER}-config-version.cmake"
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY ${PROJECT_COMPATIBILITY} ${wbpvf_extra_args}
   )
@@ -163,7 +164,7 @@ function(packageProject)
 
   configure_file(
     ${PACKAGE_PROJECT_ROOT_PATH}/Config.cmake.in
-    "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake" @ONLY
+    "${PROJECT_BINARY_DIR}/${PROJECT_NAME_LOWER}-config.cmake" @ONLY
   )
 
   install(
@@ -174,8 +175,8 @@ function(packageProject)
   )
 
   install(
-    FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-          "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME_LOWER}-config-version.cmake"
+          "${PROJECT_BINARY_DIR}/${PROJECT_NAME_LOWER}-config.cmake"
     DESTINATION "${${PROJECT_NAME}_INSTALL_CMAKEDIR}"
     COMPONENT "${PROJECT_NAME}_Development"
   )
