@@ -9,7 +9,10 @@ project(
 )
 
 if(TEST_INSTALLED_VERSION)
-  find_package(dependency 1.2 REQUIRED)
+  # Note: Wrong capitalization. The project really is called "dependency". However, PackageProject
+  # should have installed workarounds to make this work nonetheless (even on case-sensitive
+  # filesystems)
+  find_package(Dependency 1.2 REQUIRED)
   find_package(header_only 1.0 REQUIRED)
   find_package(namespaced_dependency 4.5.6 REQUIRED)
   find_package(transitive_dependency 7.8.9 REQUIRED)

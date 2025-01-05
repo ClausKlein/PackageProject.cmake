@@ -1,5 +1,36 @@
 include(CMakeFindDependencyMacro)
 
+# ##################################################################################################
+# Handle potential capitalization differences in the project's name
+# ##################################################################################################
+
+set(PROJECT_NAME "@PROJECT_NAME@")
+string(TOLOWER "${PROJECT_NAME}" PROJECT_NAME_LOWER)
+string(TOLOWER "${CMAKE_FIND_PACKAGE_NAME}" CMAKE_FIND_PACKAGE_NAME_LOWER)
+
+if("${PROJECT_NAME_LOWER}" STREQUAL "${CMAKE_FIND_PACKAGE_NAME_LOWER}")
+  if(NOT ("${PROJECT_NAME}" STREQUAL "${CMAKE_FIND_PACKAGE_NAME}"))
+    # The find_package call used a different capitalization of '@PROJECT_NAME@' This can lead to
+    # issues like the config file being found on a platform with a case-insensitive file system but
+    # not on a platform with a case-sensitive filesystem (in case the config file uses the
+    # NameConfig.cmake naming convention rather than name-config.cmake (all-lowercase)). Additional
+    # issues can arise if the caller expects variables such as Name_* to be defined where the
+    # capitalization of Name is important as well.
+    #
+    # We try to circumvent such issues by adapting the capitalization used in the find_package call
+    # but ultimately, the caller should switch to using the proper capitalization.
+    message(
+      AUTHOR_WARNING
+        "Incorrect capitalization in '${CMAKE_FIND_PACKAGE_NAME}'. It should be changed to '@PROJECT_NAME@' to avoid issues."
+    )
+    set(PROJECT_NAME "${CMAKE_FIND_PACKAGE_NAME}")
+  endif()
+endif()
+
+# ##################################################################################################
+# Look up all required dependencies
+# ##################################################################################################
+
 string(REGEX MATCHALL "[^;]+" SEPARATE_DEPENDENCIES "@PROJECT_DEPENDENCIES@")
 
 foreach(dependency ${SEPARATE_DEPENDENCIES})
