@@ -1,3 +1,5 @@
+@PACKAGE_INIT@
+
 include(CMakeFindDependencyMacro)
 
 # ##################################################################################################
@@ -39,3 +41,9 @@ foreach(dependency ${SEPARATE_DEPENDENCIES})
 endforeach()
 
 include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
+
+# ##################################################################################################
+# Final checks
+# ##################################################################################################
+
+check_required_components("${PROJECT_NAME}")

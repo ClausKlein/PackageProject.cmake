@@ -162,9 +162,10 @@ function(packageProject)
 
   mark_as_advanced("${PROJECT_NAME}_INSTALL_CMAKEDIR")
 
-  configure_file(
+  configure_package_config_file(
     ${PACKAGE_PROJECT_ROOT_PATH}/Config.cmake.in
-    "${PROJECT_BINARY_DIR}/${PROJECT_NAME_LOWER}-config.cmake" @ONLY
+    "${PROJECT_BINARY_DIR}/${PROJECT_NAME_LOWER}-config.cmake"
+    INSTALL_DESTINATION "${${PROJECT_NAME}_INSTALL_CMAKEDIR}"
   )
 
   install(
