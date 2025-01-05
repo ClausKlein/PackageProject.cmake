@@ -5,6 +5,51 @@ set(PACKAGE_PROJECT_ROOT_PATH
     CACHE INTERNAL "The path to the PackageProject directory"
 )
 
+function(_package_project_parse_version VERSION MAJOR_VAR MINOR_VAR PATCH_VAR TWEAK_VAR)
+  # clear previous matches
+  unset(CMAKE_MATCH_1)
+  unset(CMAKE_MATCH_3)
+  unset(CMAKE_MATCH_5)
+  unset(CMAKE_MATCH_7)
+
+  string(REGEX MATCH "^([0-9]+)(\\.([0-9]+))?(\\.([0-9]+))?(\\.([0-9]+))?$" _ "${VERSION}")
+
+  set(MAJOR ${CMAKE_MATCH_1})
+  set(MINOR ${CMAKE_MATCH_3})
+  set(PATCH ${CMAKE_MATCH_5})
+  set(TWEAK ${CMAKE_MATCH_7})
+
+  if(NOT DEFINED MAJOR)
+    set(MAJOR "0")
+  endif()
+  if(NOT DEFINED MINOR)
+    set(MINOR "0")
+  endif()
+  if(NOT DEFINED PATCH)
+    set(PATCH "0")
+  endif()
+  if(NOT DEFINED TWEAK)
+    set(TWEAK "0")
+  endif()
+
+  set(${MAJOR_VAR}
+      "${MAJOR}"
+      PARENT_SCOPE
+  )
+  set(${MINOR_VAR}
+      "${MINOR}"
+      PARENT_SCOPE
+  )
+  set(${PATCH_VAR}
+      "${PATCH}"
+      PARENT_SCOPE
+  )
+  set(${TWEAK_VAR}
+      "${TWEAK}"
+      PARENT_SCOPE
+  )
+endfunction()
+
 function(packageProject)
   include(CMakePackageConfigHelpers)
   include(GNUInstallDirs)
@@ -56,33 +101,10 @@ function(packageProject)
     endif()
 
     if(DEFINED PROJECT_VERSION_HEADER)
-      # clear previous matches
-      unset(CMAKE_MATCH_1)
-      unset(CMAKE_MATCH_3)
-      unset(CMAKE_MATCH_5)
-      unset(CMAKE_MATCH_7)
-
-      string(REGEX MATCH "^([0-9]+)(\\.([0-9]+))?(\\.([0-9]+))?(\\.([0-9]+))?$" _
-                   "${PROJECT_VERSION}"
+      _package_project_parse_version(
+        "${PROJECT_VERSION}" PROJECT_VERSION_MAJOR PROJECT_VERSION_MINOR PROJECT_VERSION_PATCH
+        PROJECT_VERSION_TWEAK
       )
-
-      set(PROJECT_VERSION_MAJOR ${CMAKE_MATCH_1})
-      set(PROJECT_VERSION_MINOR ${CMAKE_MATCH_3})
-      set(PROJECT_VERSION_PATCH ${CMAKE_MATCH_5})
-      set(PROJECT_VERSION_TWEAK ${CMAKE_MATCH_7})
-
-      if(NOT DEFINED PROJECT_VERSION_MAJOR)
-        set(PROJECT_VERSION_MAJOR "0")
-      endif()
-      if(NOT DEFINED PROJECT_VERSION_MINOR)
-        set(PROJECT_VERSION_MINOR "0")
-      endif()
-      if(NOT DEFINED PROJECT_VERSION_PATCH)
-        set(PROJECT_VERSION_PATCH "0")
-      endif()
-      if(NOT DEFINED PROJECT_VERSION_TWEAK)
-        set(PROJECT_VERSION_TWEAK "0")
-      endif()
 
       string(TOUPPER ${PROJECT_NAME} UPPERCASE_PROJECT_NAME)
       # ensure that the generated macro does not include invalid characters
