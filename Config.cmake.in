@@ -3,15 +3,60 @@
 include(CMakeFindDependencyMacro)
 
 # ##################################################################################################
+# Data setup
+# ##################################################################################################
+
+# The name of the package this config file is for
+set(PACKAGE_NAME "@PROJECT_NAME@")
+string(TOLOWER "${PACKAGE_NAME}" PACKAGE_NAME_LOWER)
+
+# A list of target names contained in this package
+set(TARGET_NAMES "@PACKAGE_TARGET_NAMES@")
+
+# A list of corresponding target files. The order of target files corresponds to the order of target
+# names in the TARGET_NAMES list.
+set(TARGET_FILES "@PACKAGE_TARGET_FILES@")
+list(TRANSFORM TARGET_FILES PREPEND "${CMAKE_CURRENT_LIST_DIR}/")
+
+# Separator used in the list of dependencies for a single target
+set(TARGET_DEPENDENCY_SEPARATOR "@TARGET_DEPENDENCY_SEPARATOR@")
+
+# List of target dependencies. The order of these entries corresponds to the order of target names
+# in the TARGET_NAMES list. Each entry is itself a list where individual elements are separated by
+# TARGET_DEPENDENCY_SEPARATOR.
+set(TARGET_DEPENDENCIES "@PACKAGE_TARGET_DEPENDENCIES@")
+
+# The name of the main target (to be used under all circumstances)
+set(MAIN_TARGET "@PACKAGE_MAIN_TARGET@")
+
+# Components to be selected by default (that is, if no explicit COMPONENTS where specified in the
+# find_package command
+set(DEFAULT_COMPONENTS "@PROJECT_DEFAULT_COMPONENTS@")
+
+# Consistency check
+foreach(CURRENT_LIST IN ITEMS TARGET_NAMES TARGET_FILES TARGET_DEPENDENCIES)
+  list(LENGTH ${CURRENT_LIST} LIST_SIZE)
+
+  if(NOT DEFINED N_TARGETS)
+    set(N_TARGETS "${LIST_SIZE}")
+  else()
+    if(NOT ("${N_TARGETS}" STREQUAL "${LIST_SIZE}"))
+      message(
+        FATAL_ERROR
+          "Corrupted config file for package '${PACKAGE_NAME}': target-related lists have inconsistent sizes"
+      )
+    endif()
+  endif()
+endforeach()
+
+# ##################################################################################################
 # Handle potential capitalization differences in the project's name
 # ##################################################################################################
 
-set(PROJECT_NAME "@PROJECT_NAME@")
-string(TOLOWER "${PROJECT_NAME}" PROJECT_NAME_LOWER)
 string(TOLOWER "${CMAKE_FIND_PACKAGE_NAME}" CMAKE_FIND_PACKAGE_NAME_LOWER)
 
-if("${PROJECT_NAME_LOWER}" STREQUAL "${CMAKE_FIND_PACKAGE_NAME_LOWER}")
-  if(NOT ("${PROJECT_NAME}" STREQUAL "${CMAKE_FIND_PACKAGE_NAME}"))
+if("${PACKAGE_NAME_LOWER}" STREQUAL "${CMAKE_FIND_PACKAGE_NAME_LOWER}")
+  if(NOT ("${PACKAGE_NAME}" STREQUAL "${CMAKE_FIND_PACKAGE_NAME}"))
     # The find_package call used a different capitalization of '@PROJECT_NAME@' This can lead to
     # issues like the config file being found on a platform with a case-insensitive file system but
     # not on a platform with a case-sensitive filesystem (in case the config file uses the
@@ -25,25 +70,206 @@ if("${PROJECT_NAME_LOWER}" STREQUAL "${CMAKE_FIND_PACKAGE_NAME_LOWER}")
       AUTHOR_WARNING
         "Incorrect capitalization in '${CMAKE_FIND_PACKAGE_NAME}'. It should be changed to '@PROJECT_NAME@' to avoid issues."
     )
-    set(PROJECT_NAME "${CMAKE_FIND_PACKAGE_NAME}")
+    set(PACKAGE_NAME "${CMAKE_FIND_PACKAGE_NAME}")
   endif()
 endif()
 
 # ##################################################################################################
-# Look up all required dependencies
+# Helper functions & macros
 # ##################################################################################################
 
-string(REGEX MATCHALL "[^;]+" SEPARATE_DEPENDENCIES "@PROJECT_DEPENDENCIES@")
+macro(package_error MSG)
+  set(${PACKAGE_NAME}_FOUND FALSE)
+  set(${PACKAGE_NAME}_NOT_FOUND_MESSAGE "${MSG}")
 
-foreach(dependency ${SEPARATE_DEPENDENCIES})
-  string(REPLACE " " ";" args "${dependency}")
-  find_dependency(${args})
+  # Since this is a macro, this return will exit this config file
+  return()
+endmacro()
+
+function(list_contains LIST ELEMENT OUTPUT_VARIABLE)
+  list(FIND LIST "${ELEMENT}" IDX)
+
+  if("${IDX}" STREQUAL "-1")
+    set(${OUTPUT_VARIABLE}
+        FALSE
+        PARENT_SCOPE
+    )
+  else()
+    set(${OUTPUT_VARIABLE}
+        TRUE
+        PARENT_SCOPE
+    )
+  endif()
+endfunction()
+
+macro(verify_all_components_are_valid)
+  foreach(CURRENT_COMP IN LISTS ${PACKAGE_NAME}_FIND_COMPONENTS)
+    # Verify that all specified components are actually known
+    list_contains("${TARGET_NAMES}" "${CURRENT_COMP}" COMPONENT_IS_KNOWN)
+
+    if(NOT COMPONENT_IS_KNOWN)
+      package_error("Unknown component '${CURRENT_COMP}' for package '${PACKAGE_NAME}'")
+    endif()
+
+    if("${CURRENT_COMP}" STREQUAL "${MAIN_TARGET}")
+      package_error(
+        "'${CURRENT_COMP}' is not a component for package '${PACKAGE_NAME}' - remove from COMPONENTS list"
+      )
+    endif()
+  endforeach()
+endmacro()
+
+function(get_dependencies IDX OUTPUT_VARIABLE)
+  list(GET TARGET_DEPENDENCIES ${IDX} DEPENDENCIES)
+
+  # Convert string to list by turning the custom separator to the cmake list separator (semicolon)
+  string(REPLACE "${TARGET_DEPENDENCY_SEPARATOR}" ";" DEPENDENCIES "${DEPENDENCIES}")
+
+  # Note: this causes DEPENDENCIES to effectively become an empty list, if it contains only empty
+  # elements (a quirk of how cmake represents a list containing only a single empty string)
+  list(REMOVE_DUPLICATES DEPENDENCIES)
+
+  set(${OUTPUT_VARIABLE}
+      "${DEPENDENCIES}"
+      PARENT_SCOPE
+  )
+endfunction()
+
+function(to_internal_target TARGET OUTPUT_VARIABLE)
+  # Check as-given
+  list_contains("${TARGET_NAMES}" "${TARGET}" INTERNAL_TARGET)
+  if(INTERNAL_TARGET)
+    set(${OUTPUT_VARIABLE}
+        "${TARGET}"
+        PARENT_SCOPE
+    )
+  else()
+    # Not an internal target
+    unset(${OUTPUT_VARIABLE} PARENT_SCOPE)
+  endif()
+endfunction()
+
+macro(include_target TARGET)
+  if(NOT ${PACKAGE_NAME}_${TARGET}_FOUND)
+    list(FIND TARGET_NAMES "${TARGET}" "${TARGET}_IDX")
+
+    get_dependencies("${${TARGET}_IDX}" DEPENDENCIES)
+
+    # Dependency resolution
+    foreach(CURRENT_DEP IN LISTS DEPENDENCIES)
+      # CURRENT_DEP may be a space-separated list where all additional elements represent special
+      # options to be passed to find_dependency
+      string(REPLACE " " ";" DEPENDENCY_DETAILS ${CURRENT_DEP})
+      list(GET DEPENDENCY_DETAILS 0 CURRENT_DEP)
+      list(POP_FRONT DEPENDENCY_DETAILS)
+
+      if(NOT ${PACKAGE_NAME}_${CURRENT_DEP}_FOUND)
+        to_internal_target(${CURRENT_DEP} INTERNAL_TARGET)
+
+        if(INTERNAL_TARGET)
+          if(DEPENDENCY_DETAILS)
+            # Could we do something clever with this?
+            message(
+              AUTHOR_WARNING
+                "Discarding extra info for dependency ${INTERNAL_TARGET}: ${DEPENDENCY_DETAILS}"
+            )
+          endif()
+          # Recurse to ensure that the dependency is included before the dependent target
+          include_target(${INTERNAL_TARGET})
+        else()
+          # Regular external dependency
+          find_dependency(${CURRENT_DEP} ${DEPENDENCY_DETAILS})
+
+          set(${PACKAGE_NAME}_${CURRENT_DEP}_FOUND "${CURRENT_DEP}_FOUND")
+        endif()
+      endif()
+
+      if(NOT ${PACKAGE_NAME}_${CURRENT_DEP}_FOUND)
+        # Dependency is still not met -> error
+        if(NOT ("${TARGET}" STREQUAL "${MAIN_TARGET}"))
+          set(FOR_COMPONENT "for component '${TARGET}' ")
+        endif()
+
+        package_error(
+          "Unmet dependency '${CURRENT_DEP}' ${FOR_COMPONENT}of package '${PACKAGE_NAME}'"
+        )
+      endif()
+    endforeach()
+
+    list(GET TARGET_FILES "${${TARGET}_IDX}" FILE_TO_INCLUDE)
+
+    if(NOT EXISTS ${FILE_TO_INCLUDE})
+      message(
+        FATAL_ERROR
+          "Corrupted config file for package '${PACKAGE_NAME}': Expected file '${FILE_TO_INCLUDE}' to exist, but it didn't"
+      )
+    endif()
+
+    include("${FILE_TO_INCLUDE}")
+
+    if(${PACKAGE_NAME}_NOT_FOUND_MESSAGE)
+      # There has been an error detected in the included target file -> abort processing
+      return()
+    endif()
+
+    set(${PACKAGE_NAME}_${TARGET}_FOUND TRUE)
+  endif()
+endmacro()
+
+# ##################################################################################################
+# Preliminaries
+# ##################################################################################################
+
+if(NOT ${PACKAGE_NAME}_FIND_COMPONENTS AND DEFAULT_COMPONENTS)
+  set(${PACKAGE_NAME}_FIND_COMPONENTS "${DEFAULT_COMPONENTS}")
+endif()
+
+verify_all_components_are_valid()
+
+if(NOT ${PACKAGE_NAME}_FIND_COMPONENTS AND NOT MAIN_TARGET)
+  package_error(
+    "No components specified for package '${PACKAGE_NAME}' which doesn't have a non-component part"
+  )
+endif()
+
+# ##################################################################################################
+# Include relevant targets
+# ##################################################################################################
+
+if(MAIN_TARGET)
+  include_target(${MAIN_TARGET})
+endif()
+
+foreach(CURRENT_COMPONENT IN LISTS ${PACKAGE_NAME}_FIND_COMPONENTS)
+  include_target(${CURRENT_COMPONENT})
 endforeach()
 
-include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@Targets.cmake")
-
 # ##################################################################################################
-# Final checks
+# Final checks and cleanup
 # ##################################################################################################
 
-check_required_components("${PROJECT_NAME}")
+check_required_components("${PACKAGE_NAME}")
+
+# Clear up local variables to not pollute the calling scope with them This should all variables
+# globally defined or defined in a macro (that don't use explicit prefixing that make name clashes
+# unlikely)
+unset(PACKAGE_NAME)
+unset(PACKAGE_NAME_LOWER)
+unset(TARGET_NAMES)
+unset(TARGET_FILES)
+unset(TARGET_DEPENDENCY_SEPARATOR)
+unset(TARGET_DEPENDENCIES)
+unset(MAIN_TARGET)
+unset(DEFAULT_COMPONENTS)
+unset(N_TARGETS)
+unset(LIST_SIZE)
+unset(N_TARGETS)
+unset(CMAKE_FIND_PACKAGE_NAME_LOWER)
+unset(COMPONENT_IS_KNOWN)
+unset(CURRENT_COMP)
+unset(DEPENDENCIES)
+unset(CURRENT_DEP)
+unset(DEPENDENCY_DETAILS)
+unset(INTERNAL_TARGET)
+unset(FOR_COMPONENT)
+unset(FILE_TO_INCLUDE)

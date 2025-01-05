@@ -8,6 +8,7 @@
 #include <runtime_destination_dependency/version.h>
 #include <transitive_dependency/transitive_dependency.h>
 #include <transitive_dependency/version.h>
+#include <components/pow.h>
 
 #include <string>
 
@@ -43,5 +44,6 @@ int main() {
   result &= RUNTIME_DESTINATION_DEPENDENCY_VERSION_MINOR == 5;
   result &= RUNTIME_DESTINATION_DEPENDENCY_VERSION_PATCH == 0;
   result &= RUNTIME_DESTINATION_DEPENDENCY_VERSION_TWEAK == 0;
+  result &= (components::pow(components::Number(2), components::Number(3)) == 8);
   return result ? 0 : 1;
 }
