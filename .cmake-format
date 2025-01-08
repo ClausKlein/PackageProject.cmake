@@ -57,6 +57,11 @@ parse:
         VERSION_HEADER: 1
         EXPORT_HEADER: 1
         DISABLE_VERSION_SUFFIX: 1
+        AS: 1
         CPACK: 1
         RUNTIME_DESTINATION: 1
+        DEPENDS_ON: +
+        COMPONENTS: +
         DEPENDENCIES: +
+        DEFAULT_COMPONENTS: +
+        COMPONENT_DEPENDENCIES: +

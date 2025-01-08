@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14...3.22)
+cmake_minimum_required(VERSION 3.14...3.31)
 
 project(
   transitive_dependency
@@ -11,16 +11,16 @@ include(cmake/CPM.cmake)
 
 CPMAddPackage(
   NAME fmt
-  GIT_TAG 7.1.3
+  GIT_TAG 11.1.1
   GITHUB_REPOSITORY fmtlib/fmt
-  OPTIONS "FMT_INSTALL YES"
+  OPTIONS "FMT_INSTALL ON"
 )
 
 CPMAddPackage(
   NAME cxxopts
   GITHUB_REPOSITORY jarro2783/cxxopts
-  VERSION 2.2.0
-  OPTIONS "CXXOPTS_BUILD_EXAMPLES Off" "CXXOPTS_BUILD_TESTS Off"
+  VERSION 3.2.1
+  OPTIONS "CXXOPTS_BUILD_EXAMPLES OFF" "CXXOPTS_BUILD_TESTS OFF" "CXXOPTS_ENABLE_INSTALL ON"
 )
 
 # Set default visibility to hidden for all targets
@@ -47,6 +47,6 @@ packageProject(
   INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
   VERSION_HEADER "transitive_dependency/version.h"
   EXPORT_HEADER "transitive_dependency/export.h"
-  DEPENDENCIES "fmt 7.1.3;cxxopts 2.2.0"
+  DEPENDENCIES "fmt 11.1.1;cxxopts 3.2.1"
   CPACK "${TEST_CPACK}"
 )

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.14...3.31)
 
 project(StyleCheck)
 
@@ -17,7 +17,7 @@ include(${CPM_DOWNLOAD_LOCATION})
 
 CPMAddPackage(
   NAME Format.cmake
-  VERSION 1.6
+  VERSION 1.8.3
   GITHUB_REPOSITORY TheLartians/Format.cmake
   OPTIONS "FORMAT_CHECK_CMAKE ON"
 )

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14...3.22)
+cmake_minimum_required(VERSION 3.14...3.31)
 
 project(
   components
@@ -38,26 +38,17 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../.. PackageProject)
 
 packageProject(
   NAME ${PROJECT_NAME}
-       COMPONENTS
-       # These are the different possibilities of specifying components (with aliases)
-       Comps::Core
-       components_add
-       components_mult
-       AS
-       Comps::Mult
-       components_pow
-       AS
-       Pow
+  COMPONENTS # These are the different possibilities of specifying components (with aliases)
+             Comps::Core components_add components_mult
+  AS Comps::Mult components_pow
+  AS Pow
   VERSION ${PROJECT_VERSION}
   NAMESPACE Comps
   BINARY_DIR ${PROJECT_BINARY_DIR}
   INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
-  INCLUDE_DESTINATION
-    include/${PROJECT_NAME}-${PROJECT_VERSION}
-    DEFAULT_COMPONENTS
-    Core
-    Add
-    COMPONENT_DEPENDENCIES
+  INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
+  DEFAULT_COMPONENTS Core Add
+  COMPONENT_DEPENDENCIES
     components_add
     ON
     Core
