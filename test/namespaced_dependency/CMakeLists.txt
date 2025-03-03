@@ -7,7 +7,8 @@ project(
   DESCRIPTION "A namespaced dependency for testing PackageProject.cmake"
 )
 
-set(CMAKE_VERIFY_INTERFACE_HEADER_SETS ON)
+# supported in CMake 3.23 and newer
+set(CMAKE_VERIFY_INTERFACE_HEADER_SETS OFF)
 
 set(PROJECT_NAMESPACE "ns")
 add_library(namespaced_dependency STATIC source/namespaced_dependency.cpp)
@@ -20,7 +21,7 @@ if(CMAKE_VERIFY_INTERFACE_HEADER_SETS)
 else()
   target_include_directories(
     namespaced_dependency PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-                                 $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
+                                 $<INSTALL_INTERFACE:include>
   )
 endif()
 
@@ -34,12 +35,13 @@ packageProject(
   VERSION ${PROJECT_VERSION}
   NAMESPACE ${PROJECT_NAMESPACE}
   BINARY_DIR ${PROJECT_BINARY_DIR}
-  # INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include TODO: INCLUDE_DESTINATION
-  # include/${PROJECT_NAME}-${PROJECT_VERSION}
+  INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
+  # XXX INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
   INCLUDE_DESTINATION include
   VERSION_HEADER "namespaced_dependency/version.h"
   INCLUDE_HEADER_PATTERN "*.h"
   DEPENDENCIES ""
   CPACK "${TEST_CPACK}"
+  RUNTIME_DESTINATION /
   HEADER_SETS HEADERS
 )

@@ -1,9 +1,13 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.14...3.31)
 
 set(PACKAGE_PROJECT_ROOT_PATH
     "${CMAKE_CURRENT_LIST_DIR}"
     CACHE INTERNAL "The path to the PackageProject directory"
 )
+
+# if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.31.0")
+#   cmake_policy(SET CMP0177 NEW)
+# endif()
 
 function(packageProject)
   include(CMakePackageConfigHelpers)
@@ -133,7 +137,7 @@ function(packageProject)
     set(PROJECT_RUNTIME_DESTINATION ${PROJECT_NAME}${PROJECT_VERSION_SUFFIX})
   endif()
 
-  if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.23.0" AND PROJECT_HEADER_SETS)
+  if(PROJECT_HEADER_SETS)
     # required to install if use in project target since CMake 3.23
     set(FILE_SET_ARGS "FILE_SET" "${PROJECT_HEADER_SETS}")
   endif()
