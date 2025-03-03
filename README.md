@@ -5,7 +5,7 @@
 Creating installable CMake scripts always requires a large amount of boilerplate code to get things working.
 This small script should simplify the CMake packaging process into a single, easy-to-use command.
 
-PackageProject.cmake has been tested with CMake v3.18.4.
+PackageProject.cmake has been tested with CMake v3.24.4.
 
 ## Usage
 
@@ -15,7 +15,7 @@ Also the [CPM.cmake](https://github.com/TheLartians/CPM.cmake) script should be 
 See [here](https://github.com/TheLartians/ModernCppStarter/blob/master/CMakeLists.txt) for an example usage.
 
 ```cmake
-CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.6.0")
+CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.14.0")
 
 packageProject(
   # the name of the target to export
@@ -53,6 +53,9 @@ packageProject(
   # by default libs will be installed to <...>/lib/<packagename-version>/
   # / - means relative to <...>/lib, i.e. install libs to <...>/lib/, bins to <...>/bin/, etc
   RUNTIME_DESTINATION /
+  # (optional) FILE_SET "public_headers;..."
+  # Install the target related header file sets too
+  HEADER_SETS HEADERS
 )
 ```
 
