@@ -27,7 +27,7 @@ jobs:
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v1.13
         with:
-          cmake-version: 3.18.4
+          cmake-version: 3.24.4
 
       - name: test and install local build
         run: |
@@ -57,7 +57,7 @@ jobs:
       - name: Setup cmake
         uses: jwlawson/actions-setup-cmake@v1.13
         with:
-          cmake-version: 3.18.4
+          cmake-version: 3.24.4
 
       - name: build for packaging
         run: |
