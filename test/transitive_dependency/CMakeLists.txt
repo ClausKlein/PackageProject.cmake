@@ -53,7 +53,7 @@ packageProject(
   VERSION ${PROJECT_VERSION}
   NAMESPACE ${PROJECT_NAME}
   BINARY_DIR ${PROJECT_BINARY_DIR}
-  INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include 
+  INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
   INCLUDE_DESTINATION include
   VERSION_HEADER "transitive_dependency/version.h"
   EXPORT_HEADER "transitive_dependency/export.h"

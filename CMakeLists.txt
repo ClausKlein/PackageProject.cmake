@@ -5,9 +5,7 @@ set(PACKAGE_PROJECT_ROOT_PATH
     CACHE INTERNAL "The path to the PackageProject directory"
 )
 
-# if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.31.0")
-#   cmake_policy(SET CMP0177 NEW)
-# endif()
+# if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.31.0") cmake_policy(SET CMP0177 NEW) endif()
 
 function(packageProject)
   include(CMakePackageConfigHelpers)
