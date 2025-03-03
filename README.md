@@ -54,7 +54,7 @@ packageProject(
   # / - means relative to <...>/lib, i.e. install libs to <...>/lib/, bins to <...>/bin/, etc
   RUNTIME_DESTINATION /
   # (optional) FILE_SET "public_headers;..."
-  # Install the target releated header file sets too
+  # Install the target related header file sets too
   HEADER_SETS HEADERS
 )
 ```
