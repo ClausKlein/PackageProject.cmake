@@ -8,15 +8,17 @@ project(
 )
 
 # supported in CMake 3.23 and newer
-set(CMAKE_VERIFY_INTERFACE_HEADER_SETS OFF)
+set(CMAKE_VERIFY_INTERFACE_HEADER_SETS NO)
 
 set(PROJECT_NAMESPACE "ns")
 add_library(namespaced_dependency STATIC source/namespaced_dependency.cpp)
 
 if(CMAKE_VERIFY_INTERFACE_HEADER_SETS)
   target_sources(
-    namespaced_dependency PUBLIC FILE_SET HEADERS BASE_DIRS include FILES
-                                 include/namespaced_dependency/namespaced_dependency.h
+    namespaced_dependency
+    PUBLIC FILE_SET HEADERS BASE_DIRS include FILES
+           include/namespaced_dependency/namespaced_dependency.h
+           # TODO: add missing generated headers too!
   )
 else()
   target_include_directories(
@@ -36,7 +38,6 @@ packageProject(
   NAMESPACE ${PROJECT_NAMESPACE}
   BINARY_DIR ${PROJECT_BINARY_DIR}
   INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
-  # XXX INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
   INCLUDE_DESTINATION include
   VERSION_HEADER "namespaced_dependency/version.h"
   INCLUDE_HEADER_PATTERN "*.h"
